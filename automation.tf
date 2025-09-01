@@ -70,7 +70,7 @@ REACT_APP_COGNITO_USER_POOL_WEB_CLIENT_ID=${aws_cognito_user_pool_client.main.id
 REACT_APP_COGNITO_IDENTITY_POOL_ID=${aws_cognito_identity_pool.main.id}
 
 # Lambda API Configuration
-REACT_APP_LAMBDA_API_ENDPOINT=${aws_lambda_function_url.api.function_url}
+REACT_APP_LAMBDA_API_ENDPOINT=${aws_api_gateway_deployment.main.invoke_url}/api
 
 # Environment indicator
 REACT_APP_ENVIRONMENT=production
@@ -129,7 +129,7 @@ REACT_APP_ENVIRONMENT=production
       "identityPoolId": "${aws_cognito_identity_pool.main.id}"
     },
     "lambda": {
-      "functionUrl": "${aws_lambda_function_url.api.function_url}"
+      "functionUrl": "${aws_api_gateway_deployment.main.invoke_url}/api"
     },
     "cloudfront": {
       "domain": "${aws_cloudfront_distribution.main.domain_name}"
@@ -163,7 +163,7 @@ REACT_APP_ENVIRONMENT=production
         $content = $content -replace "userPoolId: '[^']*'", "userPoolId: '${aws_cognito_user_pool.main.id}'"
         $content = $content -replace "userPoolWebClientId: '[^']*'", "userPoolWebClientId: '${aws_cognito_user_pool_client.main.id}'"
         $content = $content -replace "identityPoolId: '[^']*'", "identityPoolId: '${aws_cognito_identity_pool.main.id}'"
-        $content = $content -replace "endpoint: '[^']*'", "endpoint: '${aws_lambda_function_url.api.function_url}'"
+        $content = $content -replace "endpoint: '[^']*'", "endpoint: '${aws_api_gateway_deployment.main.invoke_url}/api'"
         [System.IO.File]::WriteAllText("src\App.js", $content, [System.Text.Encoding]::UTF8)
         Write-Host "✅ React App.js configuration updated with real values"
       } else {
@@ -233,7 +233,7 @@ REACT_APP_ENVIRONMENT=production
       Write-Host "🔐 Cognito User Pool ID: ${aws_cognito_user_pool.main.id}"
       Write-Host "🔑 Cognito Client ID: ${aws_cognito_user_pool_client.main.id}"
       Write-Host "🆔 Cognito Identity Pool ID: ${aws_cognito_identity_pool.main.id}"
-      Write-Host "⚡ Lambda Function URL: ${aws_lambda_function_url.api.function_url}"
+      Write-Host "⚡ API Gateway URL: ${aws_api_gateway_deployment.main.invoke_url}/api"
       Write-Host ""
       Write-Host "🔒 Security Note: The .env file is automatically gitignored"
       Write-Host "⚠️  CloudFront distribution may take 10-15 minutes to fully deploy"

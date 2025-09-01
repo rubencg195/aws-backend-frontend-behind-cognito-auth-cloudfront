@@ -39,3 +39,9 @@ output "website_url" {
   description = "Website URL (CloudFront)"
   value       = "https://${aws_cloudfront_distribution.main.domain_name}"
 }
+
+# API Gateway URL
+output "api_gateway_url" {
+  description = "API Gateway URL for authenticated Lambda invocation"
+  value       = "${aws_api_gateway_deployment.main.invoke_url}/api"
+}

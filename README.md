@@ -212,6 +212,58 @@ aws cognito-idp describe-user-pool --user-pool-id $(tofu output -raw cognito_use
 curl https://dog.ceo/api/breeds/image/random
 ```
 
+### 🧪 **Test API Gateway with JWT Authentication**
+
+For advanced testing and debugging, use the included test script to verify your API Gateway endpoint works correctly with JWT authentication:
+
+#### **Prerequisites**
+- Node.js installed on your system
+- A valid JWT token from your authenticated session
+
+#### **Get Your JWT Token**
+1. Sign in to your React app at the CloudFront URL
+2. Open browser console (F12 → Console)
+3. Run these commands:
+   ```javascript
+   const user = await getCurrentUser();
+   const session = await fetchAuthSession();
+   console.log(session.tokens.idToken.toString());
+   ```
+4. Copy the entire JWT token (starts with `eyJ...`)
+
+#### **Run the Test Script**
+```bash
+# Test with your JWT token
+node test-api-gateway.js <YOUR_JWT_TOKEN>
+
+# Example:
+node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+```
+
+#### **What the Test Script Does**
+- ✅ **GET Request**: Tests authenticated GET endpoint
+- ✅ **POST Request**: Tests authenticated POST endpoint  
+- ✅ **JWT Validation**: Verifies your token is accepted
+- ✅ **Response Analysis**: Shows detailed response data
+- ✅ **Error Handling**: Provides clear error messages
+
+#### **Expected Results**
+- **HTTP 200**: Success with dog image data
+- **HTTP 401**: Invalid or expired JWT token
+- **HTTP 403**: JWT token missing or malformed
+
+#### **Troubleshooting with Test Script**
+```bash
+# Test without token (should fail)
+node test-api-gateway.js
+
+# Test with invalid token (should fail)
+node test-api-gateway.js invalid-token
+
+# Test with valid token (should succeed)
+node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+```
+
 ### 🔒 **Test Security Features**
 
 This project is designed to demonstrate security. Try these tests to verify protection:
@@ -400,6 +452,7 @@ aws-website-hosting-user-auth-cognito/
 │   └── 📄 src/App.js              # Main React component
 ├── 📁 lambda/                      # Lambda function
 │   └── 📄 index.js                # Lambda handler with Dog API integration
+├── 📄 test-api-gateway.js         # Test script for API Gateway with JWT authentication
 └── 📁 terraform/                   # Infrastructure as Code
     ├── 📄 provider.tf             # AWS provider configuration
     ├── 📄 locals.tf               # Common variables and tags
