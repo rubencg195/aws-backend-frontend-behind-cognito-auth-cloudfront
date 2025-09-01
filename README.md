@@ -164,6 +164,19 @@ User → React App → Cognito → JWT Token → API Gateway → Lambda → Exte
 - **Lambda**: User context injection from validated JWT tokens
 - **AWS Services**: IAM role-based access control
 
+## 📸 Screenshots & Demo Images
+
+<!-- 
+TODO: Add screenshots and demo images here
+- Application screenshots
+- Architecture diagrams
+- Deployment process screenshots
+- AWS console screenshots
+- Test results screenshots
+-->
+
+*This section will be populated with visual documentation of the application and deployment process.*
+
 ## 🚀 Quick Start
 
 Get your AWS-hosted React app with Cognito authentication up and running in minutes using OpenTofu!
