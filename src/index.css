@@ -767,7 +767,7 @@ code {
 /* Specific styling for authenticated view (after login) */
 .App {
   min-height: 100vh;
-  padding: 40px 20px;
+  padding: 130px 60px 40px 60px; /* Increased top padding for navbar, side margins of 60px */
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
@@ -924,4 +924,480 @@ code {
     padding: 20px 16px;
     min-width: 280px;
   }
+}
+
+/* Navbar Styles */
+.navbar {
+  background: white;
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px 24px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.navbar-logo {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.navbar-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #202124;
+  white-space: nowrap;
+}
+
+.navbar-tabs {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.navbar-tab {
+  background: transparent;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #5f6368;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.navbar-tab:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
+.navbar-tab.active {
+  background: #1a73e8;
+  border-color: #1a73e8;
+  color: white;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.user-dropdown {
+  position: relative;
+}
+
+.user-button {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 140px;
+}
+
+.user-button:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.user-email {
+  font-size: 14px;
+  font-weight: 500;
+  color: #202124;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: #5f6368;
+  transition: transform 0.2s ease;
+}
+
+.user-dropdown:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 160px;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.dropdown-item {
+  background: transparent;
+  border: none;
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #202124;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+/* Settings Modal Styles */
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.settings-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.settings-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background: #f1f3f4;
+  color: #202124;
+}
+
+.settings-content {
+  padding: 24px;
+}
+
+.account-details {
+  margin-bottom: 32px;
+}
+
+.account-details h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 14px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #202124;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-active {
+  color: #137333;
+  background: #e6f4ea;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.danger-zone {
+  border-top: 1px solid #e8eaed;
+  padding-top: 24px;
+}
+
+.danger-zone h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #d93025;
+}
+
+.danger-warning {
+  background: #fce8e6;
+  border: 1px solid #fad2cf;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: #d93025;
+  line-height: 1.5;
+}
+
+.delete-account-button {
+  background: #d93025;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.delete-account-button:hover {
+  background: #b31412;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(217, 48, 37, 0.3);
+}
+
+/* About Page Styles */
+.about-content {
+  text-align: left;
+}
+
+.about-content h4 {
+  margin: 24px 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #202124;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-content h4:first-child {
+  margin-top: 0;
+}
+
+.tech-list {
+  margin: 0 0 24px 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.tech-list li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5f6368;
+  position: relative;
+}
+
+.tech-list li:before {
+  content: "•";
+  color: #1a73e8;
+  font-weight: bold;
+  position: absolute;
+  left: -20px;
+}
+
+.tech-list li strong {
+  color: #202124;
+}
+
+/* Responsive Design for Navbar */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .navbar-tabs {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .navbar-user {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .user-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .settings-modal {
+    margin: 20px;
+    max-width: calc(100% - 40px);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-brand {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .navbar-tabs {
+    gap: 4px;
+  }
+  
+  .navbar-tab {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .settings-content {
+    padding: 16px;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .detail-value {
+    max-width: 100%;
+  }
+}
+
+/* Home Page Layout */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.home-card {
+  background: white;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Dog Image Styles */
+.dog-image-container {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.dog-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 16px;
+}
+
+/* AWS Details in Settings */
+.aws-details {
+  margin: 32px 0;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.aws-details h4 {
+  margin: 0 0 20px 0;
+  color: #495057;
+  font-size: 18px;
+  font-weight: 600;
 }

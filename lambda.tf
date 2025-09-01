@@ -1,3 +1,6 @@
+# Get current AWS region
+data "aws_region" "current" {}
+
 # Lambda function for authenticated API
 resource "aws_lambda_function" "api" {
   filename         = "lambda.zip"
@@ -11,6 +14,9 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       NODE_ENV = "production"
+      COGNITO_USER_POOL_ID = aws_cognito_user_pool.main.id
+      COGNITO_CLIENT_ID = aws_cognito_user_pool_client.main.id
+      AWS_REGION = data.aws_region.current.name
     }
   }
 
@@ -50,7 +56,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 # Lambda function URL for direct invocation
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = "AWS_IAM"
+  authorization_type = "NONE"  # Allow unauthenticated access, but validate JWT in Lambda
 
   cors {
     allow_credentials = true

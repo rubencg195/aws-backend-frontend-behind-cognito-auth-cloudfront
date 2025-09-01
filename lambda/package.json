@@ -15,7 +15,9 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
   "engines": {
     "node": ">=18.0.0"
   }

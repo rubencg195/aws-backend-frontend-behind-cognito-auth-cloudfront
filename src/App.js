@@ -1,8 +1,8 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Amplify, Auth } from 'aws-amplify';
-import { getCurrentUser, signOut, fetchAuthSession, signIn, signUp, confirmSignUp } from 'aws-amplify/auth';
+import { Amplify } from 'aws-amplify';
+import { getCurrentUser, signOut, fetchAuthSession, signIn, signUp, confirmSignUp, deleteUser } from 'aws-amplify/auth';
 import { get, post } from 'aws-amplify/api';
-import './App.css';
+import './index.css';
 
 // Debug: Log environment variables
 console.log('Environment variables:', {
@@ -332,15 +332,30 @@ function App() {
   const [currentTab, setCurrentTab] = useState('home'); // 'home', 'about'
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [dogImage, setDogImage] = useState(null);
 
   useEffect(() => {
     checkAuthState();
   }, []);
 
+  useEffect(() => {
+    if (authState === 'authenticated' && currentTab === 'home' && !dogImage) {
+      handleTestAPI();
+    }
+  }, [authState, currentTab, dogImage]);
+
   const checkAuthState = async () => {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
+      
+      // Set user info from the current user
+      const userInfo = {
+        email: currentUser.signInDetails?.loginId || currentUser.username,
+        sub: currentUser.userId
+      };
+      setUserInfo(userInfo);
+      
       setAuthState('authenticated');
     } catch (error) {
       setAuthState('signIn');
@@ -355,8 +370,16 @@ function App() {
     try {
       const { isSignedIn } = await signIn({ username: formData.email, password: formData.password });
       if (isSignedIn) {
+        // Get the current user to get the userId
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        
+        const userInfo = {
+          email: formData.email,
+          sub: currentUser.userId
+        };
+        setUserInfo(userInfo);
         setAuthState('authenticated');
-        setUserInfo({ email: formData.email });
       }
     } catch (error) {
       setError(error.message);
@@ -409,7 +432,7 @@ function App() {
 
   const handleSignOut = async () => {
     try {
-      await Auth.signOut();
+      await signOut();
       setUser(null);
       setUserInfo(null);
       setAuthState('signIn');
@@ -422,9 +445,68 @@ function App() {
     }
   };
 
+  const handleTestAPI = async () => {
+    try {
+      setLoading(true);
+      console.log('🔐 Testing authenticated Lambda API call...');
+      console.log('📡 Lambda endpoint:', process.env.REACT_APP_LAMBDA_API_ENDPOINT);
+      
+      // Get the current user's JWT token from Cognito
+      const currentUser = await getCurrentUser();
+      const session = await currentUser.getSignInUserSession();
+      const idToken = session?.getIdToken();
+      const jwtToken = idToken?.getJwtToken();
+      
+      if (!jwtToken) {
+        console.error('❌ No JWT token available - user not authenticated');
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
+      
+      console.log('🔑 JWT token obtained, calling Lambda with authentication...');
+      
+      // Call our Lambda function with the JWT token in Authorization header
+      const response = await fetch(process.env.REACT_APP_LAMBDA_API_ENDPOINT, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`
+        },
+      });
+      
+      console.log('📊 Lambda response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Lambda response data:', data);
+        
+        // The Lambda function returns the dog image URL in data.dogData.message
+        if (data.dogData && data.dogData.message && data.dogData.message.includes('https://')) {
+          setDogImage(data.dogData.message);
+          console.log('🐕 Dog image URL from Lambda:', data.dogData.message);
+        } else {
+          console.log('⚠️ Unexpected response format from Lambda:', data);
+          setDogImage('https://images.dog.ceo/breeds/retriever-golden/n02099601_1024.jpg');
+        }
+      } else {
+        console.error('❌ Lambda API request failed:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        setError('API request failed. Check console for details.');
+        setDogImage('https://images.dog.ceo/breeds/retriever-golden/n02099601_1024.jpg');
+      }
+    } catch (error) {
+      console.error('💥 Error testing Lambda API:', error);
+      setError('Error calling API: ' + error.message);
+      setDogImage('https://images.dog.ceo/breeds/retriever-golden/n02099601_1024.jpg');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     try {
-      await Auth.deleteUser();
+      await deleteUser();
       handleSignOut();
     } catch (error) {
       console.error('Error deleting account:', error);
@@ -518,6 +600,42 @@ function App() {
               <span className="detail-value status-active">Active</span>
             </div>
           </div>
+
+          <div className="aws-details">
+            <h4>AWS Infrastructure Details</h4>
+            <div className="detail-row">
+              <span className="detail-label">AWS Region:</span>
+              <span className="detail-value">{process.env.REACT_APP_AWS_REGION}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Cognito User Pool:</span>
+              <span className="detail-value">{process.env.REACT_APP_COGNITO_USER_POOL_ID}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Cognito Client ID:</span>
+              <span className="detail-value">{process.env.REACT_APP_COGNITO_USER_POOL_WEB_CLIENT_ID}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Identity Pool:</span>
+              <span className="detail-value">{process.env.REACT_APP_COGNITO_IDENTITY_POOL_ID}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Lambda API Endpoint:</span>
+              <span className="detail-value">{process.env.REACT_APP_LAMBDA_API_ENDPOINT}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">CloudFront Domain:</span>
+              <span className="detail-value">dolz6o184o234.cloudfront.net</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">S3 Bucket:</span>
+              <span className="detail-value">aws-website-hosting-user-auth-cognito-website-bhua2oub</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Environment:</span>
+              <span className="detail-value">{process.env.REACT_APP_ENVIRONMENT}</span>
+            </div>
+          </div>
           
           <div className="danger-zone">
             <h4>Danger Zone</h4>
@@ -537,8 +655,8 @@ function App() {
   );
 
   const renderHome = () => (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div className="home-container">
+      <div className="home-card">
         <h3 className="auth-heading">
           🐕 AWS Website Hosting with Cognito Email Auth
         </h3>
@@ -548,35 +666,25 @@ function App() {
         <div className="auth-badge auth-badge-info">Environment: production</div>
       </div>
 
-      <div className="auth-card">
-        <h3 className="auth-heading">
-          👤 User Information
-        </h3>
-        <div className="auth-text">
-          <div>Email: {userInfo?.email}</div>
-          <div>User ID: <span className="auth-badge auth-badge-info">{userInfo?.sub}</span></div>
-        </div>
-        <button 
-          className="auth-button"
-          onClick={handleSignOut}
-        >
-          Sign Out
-        </button>
-      </div>
-
-      <div className="auth-card">
+      <div className="home-card">
         <h3 className="auth-heading">
           🐕 Test Lambda API (Authenticated)
         </h3>
         <p className="auth-text">
-          Test the authenticated Lambda function with different HTTP methods. Each request will fetch a random dog image from the Dog API!
+          Test the authenticated Lambda function with different HTTP methods. Each request will call our Lambda backend, which then fetches a random dog image from the Dog API! This demonstrates frontend-to-backend communication through AWS Lambda.
         </p>
         <button 
           className="auth-button"
-          onClick={() => {/* Add your API test logic here */}}
+          onClick={handleTestAPI}
         >
           Test GET Request
         </button>
+        {dogImage && (
+          <div className="dog-image-container">
+            <img src={dogImage} alt="Random Dog" className="dog-image" />
+            <p className="auth-text">Random dog image from Dog API via Lambda!</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -633,10 +741,179 @@ function App() {
     </div>
   );
 
+  const renderSignIn = () => (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h3 className="auth-heading">
+          🚀 Welcome Back
+        </h3>
+        <p className="auth-text">
+          Sign in to access your account and explore the dog gallery!
+        </p>
+        
+        <form onSubmit={handleSignIn} className="auth-form">
+          <div className="auth-field">
+            <label className="auth-label">Email</label>
+            <input
+              type="email"
+              className="auth-input"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label">Password</label>
+            <input
+              type="password"
+              className="auth-input"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+            />
+          </div>
+          {error && <div className="auth-error">{error}</div>}
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={loading}
+            data-loading={loading}
+          >
+            {loading ? <span className="auth-loading"></span> : 'Sign In'}
+          </button>
+          <button 
+            type="button" 
+            className="auth-button auth-button-outline" 
+            onClick={() => setAuthState('signUp')}
+          >
+            Create Account
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderSignUp = () => (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h3 className="auth-heading">
+          🎉 Create Account
+        </h3>
+        <p className="auth-text">
+          Join us to start collecting dog images and testing the API!
+        </p>
+        
+        <form onSubmit={handleSignUp} className="auth-form">
+          <div className="auth-field">
+            <label className="auth-label">Email</label>
+            <input
+              type="email"
+              className="auth-input"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label">Password</label>
+            <input
+              type="password"
+              className="auth-input"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label">Confirm Password</label>
+            <input
+              type="password"
+              className="auth-input"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              required
+            />
+          </div>
+          {error && <div className="auth-error">{error}</div>}
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={loading}
+            data-loading={loading}
+          >
+            {loading ? <span className="auth-loading"></span> : 'Create Account'}
+          </button>
+          <button 
+            type="button" 
+            className="auth-button auth-button-outline" 
+            onClick={() => setAuthState('signIn')}
+          >
+            Back to Sign In
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderConfirmSignUp = () => (
+    <div className="auth-container">
+      <div className="auth-card">
+        <h3 className="auth-heading">
+          ✉️ Verify Your Email
+        </h3>
+        <p className="auth-text">
+          Check your email for the verification code and enter it below.
+        </p>
+        
+        <form onSubmit={handleConfirmSignUp} className="auth-form">
+          <div className="auth-field">
+            <label className="auth-label">Verification Code</label>
+            <input
+              type="text"
+              className="auth-input"
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              required
+            />
+          </div>
+          {error && <div className="auth-error">{error}</div>}
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={loading}
+            data-loading={loading}
+          >
+            {loading ? <span className="auth-loading"></span> : 'Verify Email'}
+          </button>
+          <button 
+            type="button" 
+            className="auth-button auth-button-outline" 
+            onClick={() => setAuthState('signUp')}
+          >
+            Back to Sign Up
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderAuthenticated = () => (
+    <div className="App">
+      {renderNavbar()}
+      
+      {currentTab === 'home' && renderHome()}
+      {currentTab === 'about' && renderAbout()}
+      
+      {showSettings && renderSettings()}
+    </div>
+  );
+
   if (authState === 'signIn') return renderSignIn();
   if (authState === 'signUp') return renderSignUp();
   if (authState === 'confirmSignUp') return renderConfirmSignUp();
   if (authState === 'authenticated') return renderAuthenticated();
 
   return null;
-} : AuthenticatedView;
+}
+
+export default App;
