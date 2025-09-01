@@ -453,9 +453,35 @@ function App() {
       
       // Get the current user's JWT token from Cognito
       const currentUser = await getCurrentUser();
-      const session = await currentUser.getSignInUserSession();
-      const idToken = session?.getIdToken();
-      const jwtToken = idToken?.getJwtToken();
+      const session = await fetchAuthSession();
+      let idToken = session?.tokens?.idToken;
+      let jwtToken = idToken?.toString();
+      
+      console.log('🔍 Debug JWT extraction:');
+      console.log('  - currentUser:', currentUser);
+      console.log('  - session:', session);
+      console.log('  - idToken:', idToken);
+      console.log('  - jwtToken:', jwtToken);
+      console.log('  - jwtToken type:', typeof jwtToken);
+      console.log('  - jwtToken length:', jwtToken?.length);
+      
+      // Alternative method: try to get token from currentUser directly
+      if (!jwtToken) {
+        console.log('🔍 Trying alternative JWT extraction method...');
+        try {
+          const userSession = await currentUser.getSignInUserSession();
+          if (userSession) {
+            const altIdToken = userSession.getIdToken();
+            const altJwtToken = altIdToken.getJwtToken();
+            console.log('  - Alternative JWT token:', altJwtToken);
+            if (altJwtToken) {
+              jwtToken = altJwtToken;
+            }
+          }
+        } catch (altError) {
+          console.log('  - Alternative method failed:', altError);
+        }
+      }
       
       if (!jwtToken) {
         console.error('❌ No JWT token available - user not authenticated');
@@ -464,6 +490,7 @@ function App() {
       }
       
       console.log('🔑 JWT token obtained, calling Lambda with authentication...');
+      console.log('🔑 JWT token preview:', jwtToken.substring(0, 50) + '...');
       
       // Call our Lambda function with the JWT token in Authorization header
       const response = await fetch(process.env.REACT_APP_LAMBDA_API_ENDPOINT, {
@@ -898,7 +925,7 @@ function App() {
   );
 
   const renderAuthenticated = () => (
-    <div className="App">
+    <div className="App authenticated">
       {renderNavbar()}
       
       {currentTab === 'home' && renderHome()}

@@ -765,9 +765,9 @@ code {
 }
 
 /* Specific styling for authenticated view (after login) */
-.App {
+.App.authenticated {
   min-height: 100vh;
-  padding: 130px 60px 40px 60px; /* Increased top padding for navbar, side margins of 60px */
+  padding: 100px 60px 40px 60px; /* Reduced top padding from 150px to 100px, side margins of 60px */
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
@@ -944,6 +944,7 @@ code {
   left: 0;
   right: 0;
   z-index: 1000;
+  height: 50px;
 }
 
 .navbar-brand {
@@ -1096,14 +1097,14 @@ code {
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 20px;
+  padding: 120px 60px 40px 60px; /* Match main app padding */
 }
 
 .settings-modal {
   background: white;
   border-radius: 20px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
-  max-width: 500px;
+  max-width: 800px; /* Match main app card max-width */
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -1243,6 +1244,8 @@ code {
 /* About Page Styles */
 .about-content {
   text-align: left;
+  width: 100%;
+  max-width: 800px; /* Match home page card max-width */
 }
 
 .about-content h4 {
@@ -1310,9 +1313,12 @@ code {
     justify-content: center;
   }
   
+  .settings-overlay {
+    padding: 100px 24px 24px 24px; /* Match main app responsive padding */
+  }
+  
   .settings-modal {
-    margin: 20px;
-    max-width: calc(100% - 40px);
+    max-width: 100%;
   }
 }
 
@@ -1330,6 +1336,10 @@ code {
   .navbar-tab {
     padding: 6px 12px;
     font-size: 13px;
+  }
+  
+  .settings-overlay {
+    padding: 100px 16px 16px 16px; /* Match main app responsive padding */
   }
   
   .settings-content {

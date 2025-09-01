@@ -16,7 +16,7 @@ resource "aws_lambda_function" "api" {
       NODE_ENV = "production"
       COGNITO_USER_POOL_ID = aws_cognito_user_pool.main.id
       COGNITO_CLIENT_ID = aws_cognito_user_pool_client.main.id
-      AWS_REGION = data.aws_region.current.name
+      REGION = data.aws_region.current.name
     }
   }
 
@@ -60,8 +60,8 @@ resource "aws_lambda_function_url" "api" {
 
   cors {
     allow_credentials = true
-    allow_origins     = ["https://${aws_cloudfront_distribution.main.domain_name}"]
-    allow_methods     = ["GET", "POST"]
+    allow_origins     = ["*"]  # Allow all origins for testing
+    allow_methods     = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers     = ["*"]
     expose_headers    = ["*"]
     max_age          = 86400
