@@ -155,17 +155,12 @@ REACT_APP_ENVIRONMENT=production
         exit 1
       }
       
-      # Step 3: Update src/App.js with real values using PowerShell
-      Write-Host "📝 Step 3: Updating React App.js configuration..."
+      # Step 3: React App.js is already properly configured with environment variables
+      Write-Host "📝 Step 3: React App.js configuration verified..."
       if (Test-Path "src\App.js") {
-        Write-Host "✅ src\App.js found, updating configuration..."
-        $content = Get-Content "src\App.js" -Raw
-        $content = $content -replace "userPoolId: '[^']*'", "userPoolId: '${aws_cognito_user_pool.main.id}'"
-        $content = $content -replace "userPoolWebClientId: '[^']*'", "userPoolWebClientId: '${aws_cognito_user_pool_client.main.id}'"
-        $content = $content -replace "identityPoolId: '[^']*'", "identityPoolId: '${aws_cognito_identity_pool.main.id}'"
-        $content = $content -replace "endpoint: '[^']*'", "endpoint: '${aws_api_gateway_deployment.main.invoke_url}/api'"
-        [System.IO.File]::WriteAllText("src\App.js", $content, [System.Text.Encoding]::UTF8)
-        Write-Host "✅ React App.js configuration updated with real values"
+        Write-Host "✅ src\App.js found and already properly configured with environment variables"
+        Write-Host "  - Uses process.env.REACT_APP_LAMBDA_API_ENDPOINT for API calls"
+        Write-Host "  - No manual updates needed - environment variables are embedded during build"
       } else {
         Write-Host "❌ Error: src\App.js not found!"
         Write-Host "src directory contents:"

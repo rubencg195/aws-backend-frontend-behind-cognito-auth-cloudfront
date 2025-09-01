@@ -233,11 +233,20 @@ For advanced testing and debugging, use the included test script to verify your 
 
 #### **Run the Test Script**
 ```bash
-# Test with your JWT token
-node test-api-gateway.js <YOUR_JWT_TOKEN>
+# Test with your API Gateway ID and JWT token
+node test-api-gateway.js <API_GATEWAY_ID> <YOUR_JWT_TOKEN>
 
 # Example:
-node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+node test-api-gateway.js k5hw4c5osj eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+```
+
+#### **Get Your API Gateway ID**
+```bash
+# Get the full URL and extract the ID
+tofu output api_gateway_url
+
+# From the output: https://k5hw4c5osj.execute-api.us-east-1.amazonaws.com/prod/api
+# Extract the ID: k5hw4c5osj
 ```
 
 #### **What the Test Script Does**
@@ -254,14 +263,17 @@ node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXF
 
 #### **Troubleshooting with Test Script**
 ```bash
-# Test without token (should fail)
+# Test without parameters (should fail)
 node test-api-gateway.js
 
-# Test with invalid token (should fail)
-node test-api-gateway.js invalid-token
+# Test without JWT token (should fail)
+node test-api-gateway.js k5hw4c5osj
 
-# Test with valid token (should succeed)
-node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+# Test with invalid token (should fail)
+node test-api-gateway.js k5hw4c5osj invalid-token
+
+# Test with valid parameters (should succeed)
+node test-api-gateway.js k5hw4c5osj eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
 ```
 
 ### 🔒 **Test Security Features**
@@ -471,6 +483,7 @@ aws-website-hosting-user-auth-cognito/
 2. **Local Testing**: Test changes locally with `npm start`
 3. **Deploy**: Run `tofu apply -auto-approve` to deploy everything automatically
 4. **Test**: Verify changes in production environment
+5. **API Testing**: Use `test-api-gateway.js` to test API Gateway endpoints with JWT authentication
 
 ### Environment Management
 - **Development**: Local React development server

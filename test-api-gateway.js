@@ -4,24 +4,36 @@
  * Test script for API Gateway endpoint with JWT authentication
  * 
  * Usage:
- *   node test-api-gateway.js <JWT_TOKEN>
+ *   node test-api-gateway.js <API_GATEWAY_ID> <JWT_TOKEN>
  * 
  * Example:
- *   node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+ *   node test-api-gateway.js k5hw4c5osj eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...
+ * 
+ * To get your API Gateway ID:
+ *   tofu output api_gateway_url
+ *   # Extract the ID from the URL: https://k5hw4c5osj.execute-api.us-east-1.amazonaws.com/prod/api
+ *   # The ID is: k5hw4c5osj
  */
 
 const https = require('https');
 
-// Get JWT token from command line arguments
-const jwtToken = process.argv[2];
+// Get parameters from command line arguments
+const apiGatewayId = process.argv[2];
+const jwtToken = process.argv[3];
 
-if (!jwtToken) {
-  console.error('❌ Error: JWT token is required');
+// Validate required parameters
+if (!apiGatewayId || !jwtToken) {
+  console.error('❌ Error: Both API Gateway ID and JWT token are required');
   console.error('');
-  console.error('Usage: node test-api-gateway.js <JWT_TOKEN>');
+  console.error('Usage: node test-api-gateway.js <API_GATEWAY_ID> <JWT_TOKEN>');
   console.error('');
   console.error('Example:');
-  console.error('  node test-api-gateway.js eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...');
+  console.error('  node test-api-gateway.js k5hw4c5osj eyJraWQiOiJUR1RJbkJYTGVVelVGNmRVRHk4UFI0MjRlM0JPNmthdXFYd2E0QjNCVkhVPSIsImFsZyI6IlJTMjU2In0...');
+  console.error('');
+  console.error('To get your API Gateway ID:');
+  console.error('  tofu output api_gateway_url');
+  console.error('  # Extract the ID from the URL: https://k5hw4c5osj.execute-api.us-east-1.amazonaws.com/prod/api');
+  console.error('  # The ID is: k5hw4c5osj');
   console.error('');
   console.error('To get a JWT token:');
   console.error('  1. Sign in to your React app');
@@ -33,11 +45,12 @@ if (!jwtToken) {
   process.exit(1);
 }
 
-// API Gateway endpoint (update this with your actual endpoint)
-const API_ENDPOINT = 'https://k5hw4c5osj.execute-api.us-east-1.amazonaws.com/prod/api';
+// Build API Gateway endpoint from ID
+const API_ENDPOINT = `https://${apiGatewayId}.execute-api.us-east-1.amazonaws.com/prod/api`;
 
 console.log('🧪 Testing API Gateway with JWT authentication...');
 console.log('================================================');
+console.log('🔗 API Gateway ID:', apiGatewayId);
 console.log('🔗 API Endpoint:', API_ENDPOINT);
 console.log('🔑 JWT Token (first 50 chars):', jwtToken.substring(0, 50) + '...');
 console.log('');
@@ -46,7 +59,7 @@ console.log('');
 function testGetRequest() {
   return new Promise((resolve, reject) => {
     const options = {
-      hostname: 'k5hw4c5osj.execute-api.us-east-1.amazonaws.com',
+      hostname: `${apiGatewayId}.execute-api.us-east-1.amazonaws.com`,
       port: 443,
       path: '/prod/api',
       method: 'GET',
@@ -122,7 +135,7 @@ function testPostRequest() {
     });
 
     const options = {
-      hostname: 'k5hw4c5osj.execute-api.us-east-1.amazonaws.com',
+      hostname: `${apiGatewayId}.execute-api.us-east-1.amazonaws.com`,
       port: 443,
       path: '/prod/api',
       method: 'POST',
@@ -212,6 +225,7 @@ async function runTests() {
     console.log('  - POST request: Tested');
     console.log('  - JWT authentication: Verified');
     console.log('  - API Gateway integration: Working');
+    console.log('  - API Gateway ID used:', apiGatewayId);
     
   } catch (error) {
     console.error('💥 Test execution failed:', error.message);

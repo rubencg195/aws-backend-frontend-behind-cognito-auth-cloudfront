@@ -628,6 +628,19 @@ function App() {
             </div>
           </div>
 
+          <div className="danger-zone">
+            <h4>Danger Zone</h4>
+            <p className="danger-warning">
+              ⚠️ Deleting your account will permanently remove all your data and cannot be undone.
+            </p>
+            <button 
+              className="delete-account-button"
+              onClick={handleDeleteAccount}
+            >
+              🗑️ Delete Account
+            </button>
+          </div>
+
           <div className="aws-details">
             <h4>AWS Infrastructure Details</h4>
             <div className="detail-row">
@@ -662,19 +675,6 @@ function App() {
               <span className="detail-label">Environment:</span>
               <span className="detail-value">{process.env.REACT_APP_ENVIRONMENT}</span>
             </div>
-          </div>
-          
-          <div className="danger-zone">
-            <h4>Danger Zone</h4>
-            <p className="danger-warning">
-              ⚠️ Deleting your account will permanently remove all your data and cannot be undone.
-            </p>
-            <button 
-              className="delete-account-button"
-              onClick={handleDeleteAccount}
-            >
-              🗑️ Delete Account
-            </button>
           </div>
         </div>
       </div>
