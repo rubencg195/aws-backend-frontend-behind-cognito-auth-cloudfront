@@ -17,6 +17,7 @@ resource "aws_lambda_function" "api" {
       COGNITO_USER_POOL_ID = aws_cognito_user_pool.main.id
       COGNITO_CLIENT_ID = aws_cognito_user_pool_client.main.id
       REGION = data.aws_region.current.name
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.saved_images.name
     }
   }
 

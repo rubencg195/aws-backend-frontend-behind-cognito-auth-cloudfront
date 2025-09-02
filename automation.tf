@@ -3,6 +3,14 @@
 
 # Resource to create Lambda package first
 resource "null_resource" "lambda_package" {
+  triggers = {
+    # Trigger when Lambda source files change
+    lambda_index_js = filemd5("${path.module}/lambda/index.js")
+    lambda_package_json = filemd5("${path.module}/lambda/package.json")
+    # Also trigger on timestamp to ensure updates
+    timestamp = timestamp()
+  }
+
   provisioner "local-exec" {
     interpreter = ["powershell", "-Command"]
     command = <<-EOT

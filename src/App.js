@@ -239,9 +239,7 @@ function AuthenticatedView() {
         <p className="auth-text">Test the authenticated Lambda function with different HTTP methods. Each request will fetch a random dog image from the Dog API!</p>
         
         <div className="auth-flex auth-flex-column auth-gap-medium auth-margin-top-medium">
-          <button onClick={testGetRequest} className="auth-button" disabled={loading} data-loading={loading}>
-            🐕 Test GET Request
-          </button>
+          
           
           <div className="auth-flex auth-flex-row auth-gap-medium auth-align-center">
             <div className="auth-field">
@@ -254,9 +252,15 @@ function AuthenticatedView() {
                 placeholder="Enter data for POST/PUT requests"
               />
             </div>
+
+            <button onClick={testGetRequest} className="auth-button" disabled={loading} data-loading={loading}>
+            🐕 Fetch a New Dog!
+            </button>
+
             <button onClick={testPostRequest} className="auth-button" disabled={loading} data-loading={loading}>
               🐕 Test POST Request
             </button>
+            
             <button onClick={testPutRequest} className="auth-button" disabled={loading} data-loading={loading}>
               🐕 Test PUT Request
             </button>
@@ -329,10 +333,14 @@ function App() {
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', code: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentTab, setCurrentTab] = useState('home'); // 'home', 'about'
+  const [currentTab, setCurrentTab] = useState('home'); // 'home', 'about', 'saved'
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [dogImage, setDogImage] = useState(null);
+  const [savedImages, setSavedImages] = useState(new Set());
+  const [isImageSaved, setIsImageSaved] = useState(false);
+  const [savedDogsData, setSavedDogsData] = useState([]);
+  const [savedDogsLoading, setSavedDogsLoading] = useState(false);
 
   useEffect(() => {
     checkAuthState();
@@ -343,6 +351,20 @@ function App() {
       handleTestAPI();
     }
   }, [authState, currentTab, dogImage]);
+
+  // Check if current image is saved when dogImage changes
+  useEffect(() => {
+    if (dogImage) {
+      setIsImageSaved(savedImages.has(dogImage));
+    }
+  }, [dogImage, savedImages]);
+
+  // Fetch saved dogs when saved tab is selected
+  useEffect(() => {
+    if (currentTab === 'saved' && authState === 'authenticated') {
+      fetchSavedDogs();
+    }
+  }, [currentTab, authState]);
 
   const checkAuthState = async () => {
     try {
@@ -510,22 +532,25 @@ function App() {
         // The Lambda function returns the dog image URL in data.dogData.message
         if (data.dogData && data.dogData.message && data.dogData.message.includes('https://')) {
           setDogImage(data.dogData.message);
+          setIsImageSaved(savedImages.has(data.dogData.message));
+          setError(''); // Clear any previous errors
           console.log('🐕 Dog image URL from Lambda:', data.dogData.message);
         } else {
           console.log('⚠️ Unexpected response format from Lambda:', data);
-          setDogImage('https://images.dog.ceo/breeds/retriever-golden/n02099601_1024.jpg');
+          setError('Unexpected response format from API. Please try again.');
+          setDogImage(null); // Clear the image instead of showing a fallback
         }
       } else {
         console.error('❌ Lambda API request failed:', response.status);
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        setError('API request failed. Check console for details.');
-        setDogImage('https://images.dog.ceo/breeds/retriever-golden/n02099601_1024.jpg');
+        setError(`API request failed (${response.status}). Please try again.`);
+        setDogImage(null); // Clear the image instead of showing a fallback
       }
     } catch (error) {
       console.error('💥 Error testing Lambda API:', error);
       setError('Error calling API: ' + error.message);
-      setDogImage('https://images.dog.ceo/breeds/retriever-golden/n02099601_1024.jpg');
+      setDogImage(null); // Clear the image instead of showing a fallback
     } finally {
       setLoading(false);
     }
@@ -538,6 +563,226 @@ function App() {
     } catch (error) {
       console.error('Error deleting account:', error);
       setError('Failed to delete account. Please try again.');
+    }
+  };
+
+  const handleSaveImage = async () => {
+    if (!dogImage) return;
+    
+    // Prevent double execution
+    if (loading) {
+      console.log('⚠️ handleSaveImage already in progress, skipping...');
+      return;
+    }
+    
+    // Add debugging to track function calls
+    console.log('🔄 handleSaveImage called at:', new Date().toISOString());
+    console.log('🔄 Current dogImage:', dogImage);
+    
+    try {
+      setLoading(true);
+      console.log('💾 Saving image to DynamoDB:', dogImage);
+      
+      // Get JWT token
+      const currentUser = await getCurrentUser();
+      const session = await fetchAuthSession();
+      let jwtToken = session?.tokens?.idToken?.toString();
+      
+      if (!jwtToken) {
+        console.error('❌ No JWT token available');
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
+      
+      // Call Lambda to save image
+      const response = await fetch(process.env.REACT_APP_LAMBDA_API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`
+        },
+        body: JSON.stringify({
+          action: 'save_image',
+          imageUrl: dogImage
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Image saved successfully:', data);
+        setSavedImages(prev => new Set([...prev, dogImage]));
+        setIsImageSaved(true);
+        setError('');
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to save image:', errorData);
+        setError('Failed to save image: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('💥 Error saving image:', error);
+      setError('Error saving image: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!dogImage) return;
+    
+    try {
+      setLoading(true);
+      console.log('🗑️ Deleting image from DynamoDB:', dogImage);
+      
+      // Get JWT token
+      const currentUser = await getCurrentUser();
+      const session = await fetchAuthSession();
+      let jwtToken = session?.tokens?.idToken?.toString();
+      
+      if (!jwtToken) {
+        console.error('❌ No JWT token available');
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
+      
+      // Call Lambda to delete image
+      const response = await fetch(process.env.REACT_APP_LAMBDA_API_ENDPOINT, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`
+        },
+        body: JSON.stringify({
+          action: 'delete_image',
+          imageUrl: dogImage
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Image deleted successfully:', data);
+        setSavedImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(dogImage);
+          return newSet;
+        });
+        setIsImageSaved(false);
+        setError('');
+        // Refresh saved dogs data if we're on the saved tab
+        if (currentTab === 'saved') {
+          fetchSavedDogs();
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to delete image:', errorData);
+        setError('Failed to delete image: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('💥 Error deleting image:', error);
+      setError('Error deleting image: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSavedDogs = async () => {
+    try {
+      setSavedDogsLoading(true);
+      console.log('📸 Fetching saved dogs from DynamoDB...');
+      
+      // Get JWT token
+      const currentUser = await getCurrentUser();
+      const session = await fetchAuthSession();
+      let jwtToken = session?.tokens?.idToken?.toString();
+      
+      if (!jwtToken) {
+        console.error('❌ No JWT token available');
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
+      
+      // Call Lambda to get saved images
+      const response = await fetch(`${process.env.REACT_APP_LAMBDA_API_ENDPOINT}?action=saved&limit=50`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Saved dogs fetched successfully:', data);
+        setSavedDogsData(data.savedImages || []);
+        setError('');
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to fetch saved dogs:', errorData);
+        setError('Failed to fetch saved dogs: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('💥 Error fetching saved dogs:', error);
+      setError('Error fetching saved dogs: ' + error.message);
+    } finally {
+      setSavedDogsLoading(false);
+    }
+  };
+
+  const handleDeleteSavedImage = async (imageUrl) => {
+    try {
+      setLoading(true);
+      console.log('🗑️ Deleting saved image:', imageUrl);
+      
+      // Get JWT token
+      const currentUser = await getCurrentUser();
+      const session = await fetchAuthSession();
+      let jwtToken = session?.tokens?.idToken?.toString();
+      
+      if (!jwtToken) {
+        console.error('❌ No JWT token available');
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
+
+      // Add cache-busting parameter to force fresh CORS preflight
+      const apiUrl = `${process.env.REACT_APP_LAMBDA_API_ENDPOINT}?t=${Date.now()}`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`
+        },
+        body: JSON.stringify({
+          action: 'delete_image',
+          imageUrl: imageUrl
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Image deleted successfully:', data);
+        
+        // Remove the image from savedImages set
+        setSavedImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(imageUrl);
+          return newSet;
+        });
+        
+        // Refresh the saved dogs list
+        await fetchSavedDogs();
+        
+        setError('');
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to delete image:', errorData);
+        setError('Failed to delete image: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('💥 Error deleting image:', error);
+      setError('Error deleting image: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -554,6 +799,12 @@ function App() {
           onClick={() => setCurrentTab('home')}
         >
           Home
+        </button>
+        <button 
+          className={`navbar-tab ${currentTab === 'saved' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('saved')}
+        >
+          Saved Dogs
         </button>
         <button 
           className={`navbar-tab ${currentTab === 'about' ? 'active' : ''}`}
@@ -703,16 +954,147 @@ function App() {
         <button 
           className="auth-button"
           onClick={handleTestAPI}
+          disabled={loading}
+          data-loading={loading}
         >
-          Test GET Request
+          {loading ? 'Loading...' : 'Test GET Request'}
         </button>
+        
+        {error && (
+          <div className="error-container">
+            <div className="auth-error">
+              ⚠️ {error}
+            </div>
+          </div>
+        )}
+        
         {dogImage && (
           <div className="dog-image-container">
             <img src={dogImage} alt="Random Dog" className="dog-image" />
             <p className="auth-text">Random dog image from Dog API via Lambda!</p>
+            <div className="save-image-container">
+              {isImageSaved ? (
+                <button 
+                  className="auth-button auth-button-destructive"
+                  onClick={handleDeleteImage}
+                  disabled={loading}
+                  data-loading={loading}
+                >
+                  🗑️ Delete from Saved
+                </button>
+              ) : (
+                <button 
+                  className="auth-button"
+                  onClick={handleSaveImage}
+                  disabled={loading}
+                  data-loading={loading}
+                >
+                  💾 Save Image
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
+    </div>
+  );
+
+  const renderSavedDogs = () => (
+    <div className="saved-dogs-container">
+      <div className="saved-dogs-header">
+        <h3 className="auth-heading">🐕 Your Saved Dogs</h3>
+        <p className="auth-text">
+          Here are all the adorable dogs you've saved to your collection!
+        </p>
+        <div className="saved-dogs-actions">
+          <button 
+            className="auth-button auth-button-outline"
+            onClick={fetchSavedDogs}
+            disabled={savedDogsLoading}
+            data-loading={savedDogsLoading}
+          >
+            {savedDogsLoading ? 'Loading...' : '🔄 Refresh'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="error-container">
+          <div className="auth-error">
+            ⚠️ {error}
+          </div>
+        </div>
+      )}
+
+      {savedDogsLoading ? (
+        <div className="loading-container">
+          <div className="auth-loading"></div>
+          <p className="auth-text">Loading your saved dogs...</p>
+        </div>
+      ) : savedDogsData.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">🐕</div>
+          <h4 className="auth-heading">No saved dogs yet!</h4>
+          <p className="auth-text">
+            Go to the Home tab and save some adorable dogs to see them here.
+          </p>
+          <button 
+            className="auth-button"
+            onClick={() => setCurrentTab('home')}
+          >
+            Go to Home
+          </button>
+        </div>
+      ) : (
+        <div className="saved-dogs-grid">
+          {savedDogsData.map((dog, index) => (
+            <div key={dog.id || index} className="saved-dog-card">
+              <div className="saved-dog-image-container">
+                <img
+                  src={dog.image_url}
+                  alt={`Saved dog - ${dog.breed || 'Unknown breed'}`}
+                  className="saved-dog-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+                <div style={{ display: 'none', textAlign: 'center', padding: '20px', color: '#666' }}>
+                  🐕 Image loading...
+                </div>
+              </div>
+              <div className="saved-dog-info">
+                <h4 className="saved-dog-breed">{dog.breed || 'Unknown Breed'}</h4>
+                {dog.description && (
+                  <p className="saved-dog-description">{dog.description}</p>
+                )}
+                <p className="saved-dog-date">
+                  Saved: {new Date(dog.created_at).toLocaleDateString()}
+                </p>
+                <p className="saved-dog-time">
+                  {new Date(dog.created_at).toLocaleTimeString()}
+                </p>
+                <button 
+                  className="delete-saved-image-btn"
+                  onClick={() => handleDeleteSavedImage(dog.image_url)}
+                  disabled={loading}
+                  title="Delete this image"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {savedDogsData.length > 0 && (
+        <div className="saved-dogs-footer">
+          <p className="auth-text">
+            You have {savedDogsData.length} saved dog{savedDogsData.length !== 1 ? 's' : ''} in your collection!
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -929,6 +1311,7 @@ function App() {
       {renderNavbar()}
       
       {currentTab === 'home' && renderHome()}
+      {currentTab === 'saved' && renderSavedDogs()}
       {currentTab === 'about' && renderAbout()}
       
       {showSettings && renderSettings()}

@@ -15,7 +15,9 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "aws-sdk": "^2.1691.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
