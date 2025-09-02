@@ -189,16 +189,51 @@ User → React App → Cognito → JWT Token → API Gateway → Lambda → Exte
 
 ## 📸 Screenshots & Demo Images
 
-<!-- 
-TODO: Add screenshots and demo images here
-- Application screenshots
-- Architecture diagrams
-- Deployment process screenshots
-- AWS console screenshots
-- Test results screenshots
--->
+This section contains visual documentation of the application features, AWS console screenshots, and deployment process.
 
-*This section will be populated with visual documentation of the application and deployment process.*
+### Application Screenshots
+
+#### Home Page
+![Home Page](./images/home.png)
+*Main application interface showing the dog image display and save functionality*
+
+#### About Page
+![About Page](./images/about.png)
+*About page with project information and architecture details*
+
+#### Saved Dogs Gallery
+![Saved Dogs Gallery](./images/saved.png)
+*Saved dogs gallery showing user's collection of saved dog images*
+
+#### Settings Page
+![Settings Page](./images/settings.png)
+*User settings page with account details and management options*
+
+#### New Dog Image Feature
+![New Dog Image](./images/new-dog.png)
+*Demonstration of the "New Dog Image!" button functionality*
+
+### AWS Console Screenshots
+
+#### Lambda Function
+![Lambda Function](./images/lambda.png)
+*AWS Lambda function configuration and monitoring dashboard*
+
+#### Lambda Security (Public Access Rejected)
+![Lambda Security](./images/lambda-reject-public.png)
+*Demonstration of Lambda function security - public access properly rejected*
+
+#### DynamoDB Table
+![DynamoDB Table](./images/dynamo.png)
+*DynamoDB table structure showing saved images data*
+
+#### DynamoDB Item Details
+![DynamoDB Item](./images/dynamo-item.png)
+*Detailed view of a saved image item in DynamoDB with all fields*
+
+### Architecture & Deployment
+
+These screenshots demonstrate the complete application architecture, security implementation, and data flow from the React frontend through AWS services to the external Dog API.
 
 ## 🚀 Quick Start
 

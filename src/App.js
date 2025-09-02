@@ -333,9 +333,9 @@ function App() {
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', code: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentTab, setCurrentTab] = useState('home'); // 'home', 'about', 'saved'
+  const [currentTab, setCurrentTab] = useState('home'); // 'home', 'about', 'saved', 'settings'
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+
   const [dogImage, setDogImage] = useState(null);
   const [savedImages, setSavedImages] = useState(new Set());
   const [isImageSaved, setIsImageSaved] = useState(false);
@@ -460,7 +460,6 @@ function App() {
       setAuthState('signIn');
       setCurrentTab('home');
       setShowUserDropdown(false);
-      setShowSettings(false);
       window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
@@ -812,6 +811,12 @@ function App() {
         >
           About
         </button>
+        <button 
+          className={`navbar-tab ${currentTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('settings')}
+        >
+          Settings
+        </button>
       </div>
 
       <div className="navbar-user">
@@ -830,7 +835,7 @@ function App() {
               <button 
                 className="dropdown-item"
                 onClick={() => {
-                  setShowSettings(true);
+                  setCurrentTab('settings');
                   setShowUserDropdown(false);
                 }}
               >
@@ -850,82 +855,72 @@ function App() {
   );
 
   const renderSettings = () => (
-    <div className="settings-overlay" onClick={() => setShowSettings(false)}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-header">
-          <h3>Account Settings</h3>
+    <div className="settings-container">
+      <div className="settings-card">
+        <h3 className="auth-heading">⚙️ Account Settings</h3>
+        
+        <div className="account-details">
+          <h4 className="auth-heading">Account Information</h4>
+          <div className="detail-row">
+            <span className="detail-label">Email:</span>
+            <span className="detail-value">{userInfo?.email}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">User ID:</span>
+            <span className="detail-value">{userInfo?.sub}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Status:</span>
+            <span className="detail-value status-active">Active</span>
+          </div>
+        </div>
+
+        <div className="danger-zone">
+          <h4 className="auth-heading">Danger Zone</h4>
+          <p className="danger-warning">
+            ⚠️ Deleting your account will permanently remove all your data and cannot be undone.
+          </p>
           <button 
-            className="close-button"
-            onClick={() => setShowSettings(false)}
+            className="delete-account-button"
+            onClick={handleDeleteAccount}
           >
-            ✕
+            🗑️ Delete Account
           </button>
         </div>
-        
-        <div className="settings-content">
-          <div className="account-details">
-            <h4>Account Information</h4>
-            <div className="detail-row">
-              <span className="detail-label">Email:</span>
-              <span className="detail-value">{userInfo?.email}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">User ID:</span>
-              <span className="detail-value">{userInfo?.sub}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Status:</span>
-              <span className="detail-value status-active">Active</span>
-            </div>
-          </div>
 
-          <div className="danger-zone">
-            <h4>Danger Zone</h4>
-            <p className="danger-warning">
-              ⚠️ Deleting your account will permanently remove all your data and cannot be undone.
-            </p>
-            <button 
-              className="delete-account-button"
-              onClick={handleDeleteAccount}
-            >
-              🗑️ Delete Account
-            </button>
+        <div className="aws-details">
+          <h4 className="auth-heading">AWS Infrastructure Details</h4>
+          <div className="detail-row">
+            <span className="detail-label">AWS Region:</span>
+            <span className="detail-value">{process.env.REACT_APP_AWS_REGION}</span>
           </div>
-
-          <div className="aws-details">
-            <h4>AWS Infrastructure Details</h4>
-            <div className="detail-row">
-              <span className="detail-label">AWS Region:</span>
-              <span className="detail-value">{process.env.REACT_APP_AWS_REGION}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Cognito User Pool:</span>
-              <span className="detail-value">{process.env.REACT_APP_COGNITO_USER_POOL_ID}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Cognito Client ID:</span>
-              <span className="detail-value">{process.env.REACT_APP_COGNITO_USER_POOL_WEB_CLIENT_ID}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Identity Pool:</span>
-              <span className="detail-value">{process.env.REACT_APP_COGNITO_IDENTITY_POOL_ID}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Lambda API Endpoint:</span>
-              <span className="detail-value">{process.env.REACT_APP_LAMBDA_API_ENDPOINT}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">CloudFront Domain:</span>
-              <span className="detail-value">dolz6o184o234.cloudfront.net</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">S3 Bucket:</span>
-              <span className="detail-value">aws-website-hosting-user-auth-cognito-website-bhua2oub</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Environment:</span>
-              <span className="detail-value">{process.env.REACT_APP_ENVIRONMENT}</span>
-            </div>
+          <div className="detail-row">
+            <span className="detail-label">Cognito User Pool:</span>
+            <span className="detail-value">{process.env.REACT_APP_COGNITO_USER_POOL_ID}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Cognito Client ID:</span>
+            <span className="detail-value">{process.env.REACT_APP_COGNITO_USER_POOL_WEB_CLIENT_ID}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Identity Pool:</span>
+            <span className="detail-value">{process.env.REACT_APP_COGNITO_IDENTITY_POOL_ID}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Lambda API Endpoint:</span>
+            <span className="detail-value">{process.env.REACT_APP_LAMBDA_API_ENDPOINT}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">CloudFront Domain:</span>
+            <span className="detail-value">dolz6o184o234.cloudfront.net</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">S3 Bucket:</span>
+            <span className="detail-value">aws-website-hosting-user-auth-cognito-website-bhua2oub</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Environment:</span>
+            <span className="detail-value">{process.env.REACT_APP_ENVIRONMENT}</span>
           </div>
         </div>
       </div>
@@ -951,14 +946,6 @@ function App() {
         <p className="auth-text">
           Test the authenticated Lambda function with different HTTP methods. Each request will call our Lambda backend, which then fetches a random dog image from the Dog API! This demonstrates frontend-to-backend communication through AWS Lambda.
         </p>
-        <button 
-          className="auth-button"
-          onClick={handleTestAPI}
-          disabled={loading}
-          data-loading={loading}
-        >
-          {loading ? 'Loading...' : 'Test GET Request'}
-        </button>
         
         {error && (
           <div className="error-container">
@@ -972,6 +959,16 @@ function App() {
           <div className="dog-image-container">
             <img src={dogImage} alt="Random Dog" className="dog-image" />
             <p className="auth-text">Random dog image from Dog API via Lambda!</p>
+            
+            <button 
+              className="auth-button"
+              onClick={handleTestAPI}
+              disabled={loading}
+              data-loading={loading}
+            >
+              {loading ? 'Loading...' : 'New Dog Image!'}
+            </button>
+            
             <div className="save-image-container">
               {isImageSaved ? (
                 <button 
@@ -994,6 +991,17 @@ function App() {
               )}
             </div>
           </div>
+        )}
+        
+        {!dogImage && (
+          <button 
+            className="auth-button"
+            onClick={handleTestAPI}
+            disabled={loading}
+            data-loading={loading}
+          >
+            {loading ? 'Loading...' : 'New Dog Image!'}
+          </button>
         )}
       </div>
     </div>
@@ -1099,7 +1107,7 @@ function App() {
   );
 
   const renderAbout = () => (
-    <div className="auth-container">
+    <div className="about-container">
       <div className="auth-card">
         <h3 className="auth-heading">
           🚀 About This Project
@@ -1313,8 +1321,7 @@ function App() {
       {currentTab === 'home' && renderHome()}
       {currentTab === 'saved' && renderSavedDogs()}
       {currentTab === 'about' && renderAbout()}
-      
-      {showSettings && renderSettings()}
+      {currentTab === 'settings' && renderSettings()}
     </div>
   );
 
